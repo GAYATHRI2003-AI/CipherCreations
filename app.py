@@ -8,6 +8,7 @@ import nltk
 
 # Download NLTK data if not already done
 nltk.download('punkt')
+nltk.download('all')
 nltk.download('stopwords')
 
 # Pricing model
@@ -75,7 +76,7 @@ def display_app():
         """
         <style>
         body {
-            background-image: url('https://path-to-your-ai-themed-background.jpg');
+            background-image: url('https://img.freepik.com/free-vector/wavy-background-concept_23-2148497712.jpg');
             background-size: cover;
             background-position: center;
             color: white;
