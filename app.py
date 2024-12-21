@@ -1,7 +1,7 @@
 import streamlit as st
+import string
 import requests
 from bs4 import BeautifulSoup
-import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import nltk
@@ -13,25 +13,54 @@ nltk.download('stopwords')
 # Pricing model
 PRICE_PER_TOKEN = 0.50  # Price per token in dollars (updated to $0.50)
 
-# Function to scrape website content
 def scrape_website(url):
+    """
+    Scrapes text content from the given website URL.
+    
+    Args:
+        url (str): The website URL to scrape.
+        
+    Returns:
+        str: Extracted text content from the website.
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()
+        
+        # Parse the website content using BeautifulSoup
         soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Extract text from the webpage
         text = soup.get_text(separator=' ')
         return text
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching the website: {e}")
         return ""
 
-# Function to tokenize text and calculate token count and price
 def tokenize_and_calculate(text):
+    """
+    Tokenizes input text, removes stop words and punctuations, and calculates token count.
+    
+    Args:
+        text (str): The input text to process.
+        
+    Returns:
+        dict: Contains original tokens, cleaned tokens, token count, and pricing.
+    """
+    # Define stop words and punctuation set
     stop_words = set(stopwords.words('english'))
     punctuations = set(string.punctuation)
+    
+    # Tokenize the text
     tokens = word_tokenize(text)
+    
+    # Remove stop words and punctuations
     cleaned_tokens = [word for word in tokens if word.lower() not in stop_words and word not in punctuations]
+    
+    # Calculate pricing based on the cleaned tokens
     total_price = len(cleaned_tokens) * PRICE_PER_TOKEN
+    
+    # Return the result
     return {
         "original_tokens": tokens,
         "cleaned_tokens": cleaned_tokens,
@@ -39,70 +68,79 @@ def tokenize_and_calculate(text):
         "total_price": total_price
     }
 
-# Main function for Streamlit UI
-def main():
-    # Set the page layout and theme
-    st.set_page_config(page_title="AI Text Scraper & Tokenizer", page_icon="🤖", layout="wide")
-    
-    # Add a background image to the app
+# Streamlit Front-End
+def display_app():
+    # AI-Themed background
     st.markdown(
         """
         <style>
         body {
-            background-image: url('https://www.example.com/ai-themed-background.jpg'); 
+            background-image: url('https://path-to-your-ai-themed-background.jpg');
             background-size: cover;
+            background-position: center;
+            color: white;
+        }
+        .stButton>button {
+            background-color: #2a5d8f;
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .stTextInput>div>input {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 2px solid #2a5d8f;
+            border-radius: 8px;
         }
         </style>
-        """, unsafe_allow_html=True
-    )
-
-    # Add a header with some animation
-    st.title("Welcome to AI Text Scraper & Tokenizer 🤖")
-    st.markdown(
-        """
-        <div style="color:white; font-size: 24px; text-align:center;">
-        Automatically tokenize and calculate the price for your text!
-        </div>
         """, unsafe_allow_html=True)
 
-    # Provide user options for input
-    input_choice = st.radio("Choose how to input text:", ('Manual Text Input', 'Provide Website URL'))
+    # Title of the app
+    st.title("AI-Text Processor")
 
-    if input_choice == 'Manual Text Input':
-        user_input = st.text_area("Enter your text here:")
-        if st.button("Process Text"):
-            if user_input:
-                result = tokenize_and_calculate(user_input)
-                display_results(result)
+    # Prompt for user input
+    st.subheader("Welcome to the AI Text Processor!")
+    input_choice = st.radio("Choose input method:", ("Manual text input", "Provide website URL"))
+
+    if input_choice == 'Manual text input':
+        # Manual text input
+        manual_text = st.text_area("Enter your text:", height=200)
+        if manual_text:
+            st.text("Processing your text...\n")
+            result = tokenize_and_calculate(manual_text)
+    
+    elif input_choice == 'Provide website URL':
+        # Website URL input
+        url = st.text_input("Enter the website URL:")
+        if url:
+            st.text("Fetching content from the website...\n")
+            # Scrape text content from the website
+            scraped_text = scrape_website(url)
+            
+            if scraped_text:
+                st.success("Website content fetched successfully!\n")
+                result = tokenize_and_calculate(scraped_text)
             else:
-                st.error("Please enter some text.")
+                st.error("Failed to fetch or process the website content.")
+                return
+    
+    # Display results
+    if 'result' in locals():
+        st.subheader("Results")
 
-    elif input_choice == 'Provide Website URL':
-        url_input = st.text_input("Enter the website URL:")
-        if st.button("Fetch & Process Website"):
-            if url_input:
-                scraped_text = scrape_website(url_input)
-                if scraped_text:
-                    result = tokenize_and_calculate(scraped_text)
-                    display_results(result)
-            else:
-                st.error("Please enter a valid URL.")
+        # Display original and cleaned tokens
+        st.write("Original Tokens (First 50):")
+        st.write(result["original_tokens"][:50])
 
-# Function to display results in a formatted way
-def display_results(result):
-    st.subheader("Results:")
-    
-    st.write("### Original Tokens (First 50):")
-    st.write(result["original_tokens"][:50])
-    
-    st.write("### Cleaned Tokens (First 50):")
-    st.write(result["cleaned_tokens"][:50])
-    
-    st.write("### Token Count (Excluding Stop Words and Punctuations):")
-    st.write(result["token_count"])
-    
-    st.write("### Total Price for Cleaned Tokens ($0.50 per token):")
-    st.write(f"${result['total_price']:.2f}")
+        st.write("\nCleaned Tokens (First 50):")
+        st.write(result["cleaned_tokens"][:50])
 
-if __name__ == '__main__':
-    main()
+        st.write("\nToken Count (Excluding Stop Words and Punctuations):")
+        st.write(result["token_count"])
+
+        st.write("\nTotal Price for Cleaned Tokens ($0.50 per token):")
+        st.write(f"${result['total_price']:.2f}")
+
+# Main function to run the app
+if _name_ == '_main_':
+    display_app()
