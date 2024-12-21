@@ -131,7 +131,7 @@ if input_choice == "Manual Text Input":
         if manual_text.strip():
             result = tokenize_and_calculate(manual_text)
             st.subheader("Results")
-            with st.beta_container():
+            with st.container():
                 st.markdown('<div class="results-card">', unsafe_allow_html=True)
                 st.write("*Original Tokens (First 50):*")
                 st.write(result["original_tokens"][:50])
@@ -157,7 +157,7 @@ elif input_choice == "Website URL":
             if scraped_text:
                 result = tokenize_and_calculate(scraped_text)
                 st.subheader("Results")
-                with st.beta_container():
+                with st.container():
                     st.markdown('<div class="results-card">', unsafe_allow_html=True)
                     st.write("*Original Tokens (First 50):*")
                     st.write(result["original_tokens"][:50])
