@@ -142,5 +142,5 @@ def display_app():
         st.write(f"${result['total_price']:.2f}")
 
 # Main function to run the app
-if _name_ == '_main_':
+if __name__ == '__main__':
     display_app()
